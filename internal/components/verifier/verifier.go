@@ -69,8 +69,9 @@ func Verify(actualData, expectedTemplate string) error {
 	if !cmp.Equal(expected, actual) {
 		// TODO: use a custom Reporter (suggested by the comment of cmp.Diff)
 		diff := cmp.Diff(expected, actual)
-		logger.Log.WithField("actualData", actualData).Info("\n===actualData===\n")
-		logger.Log.WithField("expectedTemplate", expectedTemplate).Info("\n===expectedTemplate===\n")
+		logger.Log.Info(actualData)
+		logger.Log.Info("^actual=======================\n")
+		logger.Log.Info(expectedTemplate)
 		// return &MismatchError{diff: fmt.Sprintf("mismatch (-want +got):\n%s\n===expected===\n%s\n===actual===\n%s===actualData===\n%s===expectedTemplate===\n%s", diff, expected, actual, actualData, expectedTemplate)}
 		return &MismatchError{diff: fmt.Sprintf("mismatch (-want +got):\n%s", diff)}
 
