@@ -65,7 +65,9 @@ func Verify(actualData, expectedTemplate string) error {
 	if err := yaml.Unmarshal(b.Bytes(), &expected); err != nil {
 		return fmt.Errorf("failed to unmarshal expected data: %v", err)
 	}
-
+	logger.Log.Info(actualData)
+	logger.Log.Info("^actual=======================\n")
+	logger.Log.Info(expectedTemplate)
 	if !cmp.Equal(expected, actual) {
 		// TODO: use a custom Reporter (suggested by the comment of cmp.Diff)
 		diff := cmp.Diff(expected, actual)
