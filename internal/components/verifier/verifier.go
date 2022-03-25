@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/apache/skywalking-infra-e2e/internal/logger"
 	"github.com/apache/skywalking-infra-e2e/third-party/go/template"
 
 	"github.com/google/go-cmp/cmp"
@@ -45,6 +46,9 @@ func (e *MismatchError) Error() string {
 
 // Verify checks if the actual data match the expected template.
 func Verify(actualData, expectedTemplate string) error {
+	logger.Log.Info("checking abcdef added log1")
+	logger.Log.Info("checking abcdef added log2")
+
 	var actual interface{}
 	if err := yaml.Unmarshal([]byte(actualData), &actual); err != nil {
 		return fmt.Errorf("failed to unmarshal actual data: %v", err)
@@ -68,7 +72,10 @@ func Verify(actualData, expectedTemplate string) error {
 	if !cmp.Equal(expected, actual) {
 		// TODO: use a custom Reporter (suggested by the comment of cmp.Diff)
 		diff := cmp.Diff(expected, actual)
-		return &MismatchError{diff: fmt.Sprintf("mismatch (-want +got):\n%s\n===expected===\n%s\n===actual===\n%s", diff, expected, actual)}
+		logger.Log.Info("abc actualData %s", actualData)
+		logger.Log.Info("abc expectedTemplate %s", expectedTemplate)
+
+		return &MismatchError{diff: fmt.Sprintf("mismatch (-want +got):\n%s\n===expected===\n%s\n===actual===\n%s===actualData===\n%s===expectedTemplate===\n%s", diff, expected, actual, actualData, expectedTemplate)}
 	}
 	return nil
 }
