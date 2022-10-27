@@ -135,20 +135,19 @@ func exposeComposeService(services []*ComposeService, cli *client.Client,
 
 	// find exported port and build env
 	for _, service := range services {
-		serviceName, num := getInstanceName(service.Name)
-		container, err := findContainer(cli, identity, serviceName, num)
-		if err != nil {
-			return err
-		}
-
 		// expose port
-		if err := exposeComposePort(dockerProvider, service, container, e2eConfig); err != nil {
+		if err := exposeComposePort(dockerProvider, service, cli, identity, e2eConfig); err != nil {
 			return err
 		}
 
 		// if service log not follow, expose log
 		if !service.beenFollowLog {
-			if err := exposeComposeLog(dockerProvider.client, service, container.ID, logFollower); err != nil {
+			c, err := service.FindContainer(cli, identity)
+			if err != nil {
+				logger.Log.Warn(err)
+				continue
+			}
+			if err := exposeComposeLog(dockerProvider.client, service, c.ID, logFollower); err != nil {
 				return err
 			}
 			service.beenFollowLog = true
@@ -157,7 +156,12 @@ func exposeComposeService(services []*ComposeService, cli *client.Client,
 	return nil
 }
 
-func exposeComposePort(dockerProvider *DockerProvider, service *ComposeService, container *types.Container,
+func (c *ComposeService) FindContainer(cli *client.Client, identity string) (*types.Container, error) {
+	serviceName, num := getInstanceName(c.Name)
+	return findContainer(cli, identity, serviceName, num)
+}
+
+func exposeComposePort(dockerProvider *DockerProvider, service *ComposeService, cli *client.Client, identity string,
 	e2eConfig *config.E2EConfig) error {
 	if len(service.waitStrategies) == 0 {
 		return nil
@@ -165,6 +169,11 @@ func exposeComposePort(dockerProvider *DockerProvider, service *ComposeService, 
 
 	// get real ip address for access and export to env
 	host, err := dockerProvider.daemonHost(context.Background())
+	if err != nil {
+		return err
+	}
+
+	container, err := service.FindContainer(cli, identity)
 	if err != nil {
 		return err
 	}
@@ -237,7 +246,7 @@ func buildComposeServices(e2eConfig *config.E2EConfig, compose *testcontainers.L
 	waitTimeout := e2eConfig.Setup.GetTimeout()
 	services := make([]*ComposeService, 0)
 	for service, content := range compose.Services {
-		serviceConfig := content.(map[interface{}]interface{})
+		serviceConfig := content.(map[any]any)
 		ports := serviceConfig["ports"]
 		serviceContext := &ComposeService{Name: service}
 		services = append(services, serviceContext)
@@ -245,7 +254,7 @@ func buildComposeServices(e2eConfig *config.E2EConfig, compose *testcontainers.L
 			continue
 		}
 
-		portList := ports.([]interface{})
+		portList := ports.([]any)
 		for inx := range portList {
 			exportPort, err := getExpectPort(portList[inx])
 			if err != nil {
@@ -264,7 +273,7 @@ func buildComposeServices(e2eConfig *config.E2EConfig, compose *testcontainers.L
 	return services, nil
 }
 
-func getExpectPort(portConfig interface{}) (int, error) {
+func getExpectPort(portConfig any) (int, error) {
 	switch conf := portConfig.(type) {
 	case int:
 		return conf, nil

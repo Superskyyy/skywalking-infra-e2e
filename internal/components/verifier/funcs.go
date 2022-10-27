@@ -18,7 +18,10 @@
 package verifier
 
 import (
+	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"regexp"
 	"strings"
@@ -30,19 +33,21 @@ import (
 // Use this to pass the functions into the template engine:
 // 	tpl := template.New("foo").Funcs(funcMap()))
 func funcMap() template.FuncMap {
-	fm := make(map[string]interface{}, len(customFuncMap))
+	fm := make(map[string]any, len(customFuncMap))
 	for k, v := range customFuncMap {
 		fm[k] = v
 	}
 	return template.FuncMap(fm)
 }
 
-var customFuncMap = map[string]interface{}{
+var customFuncMap = map[string]any{
 	// Basic:
 	"notEmpty": notEmpty,
 
 	// Encoding:
-	"b64enc": base64encode,
+	"b64enc":    base64encode,
+	"sha256enc": sha256encode,
+	"sha512enc": sha512encode,
 
 	// Regex:
 	"regexp": regexpMatch,
@@ -52,11 +57,29 @@ func base64encode(s string) string {
 	return base64.StdEncoding.EncodeToString([]byte(s))
 }
 
-func notEmpty(s string) string {
-	if len(strings.TrimSpace(s)) > 0 {
-		return s
+func sha256encode(s string) string {
+	hash := sha256.New()
+	hash.Write([]byte(s))
+	return hex.EncodeToString(hash.Sum(nil))
+}
+
+func sha512encode(s string) string {
+	hash := sha512.New()
+	hash.Write([]byte(s))
+	return hex.EncodeToString(hash.Sum(nil))
+}
+
+func notEmpty(s interface{}) string {
+	if s == nil {
+		return fmt.Sprintf("<%q is empty, wanted is not empty>", s)
 	}
-	return fmt.Sprintf("<%q is empty, wanted is not empty>", s)
+	if s, ok := s.(string); ok {
+		if len(strings.TrimSpace(s)) > 0 {
+			return s
+		}
+		return fmt.Sprintf("<%q is empty, wanted is not empty>", s)
+	}
+	return fmt.Sprintf("notEmpty only supports nil or string type, but was %T", s)
 }
 
 func regexpMatch(s, pattern string) string {
@@ -65,7 +88,8 @@ func regexpMatch(s, pattern string) string {
 		return fmt.Sprintf(`<%q>`, err)
 	}
 	if !matched {
-		return fmt.Sprintf("<%q does not match the pattern %q>", s, pattern)
+		// Note: Changing %s to %q for s would throw yaml parsing error
+		return fmt.Sprintf("<%s does not match the pattern %q>", s, pattern)
 	}
 	return s
 }

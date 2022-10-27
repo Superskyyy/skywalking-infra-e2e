@@ -2,14 +2,17 @@ Changes by Version
 ==================
 Release Notes.
 
-1.2.0
+1.3.0
 ------------------
 #### Features
-* Expand kind file path with system environment.
+* Support `sha256enc` and `sha512enc` encoding in verify case.
+* Support `hasPrefix` and `hasSuffix` string verifier in verify case.
+* Bump up `kind` to v0.14.0.
 
 #### Bug Fixes
-* Fix the problem of parsing `verify.retry.interval` without setting value.
+
+#### Documentation
 
 #### Issues and PR
-- All issues are [here](https://github.com/apache/skywalking/milestone/111?closed=1)
-- All and pull requests are [here](https://github.com/apache/skywalking-infra-e2e/pulls?q=is%3Apr+is%3Aclosed+milestone%3A1.2.0)
+- All issues are [here](https://github.com/apache/skywalking/milestone/148?closed=1)
+- All and pull requests are [here](https://github.com/apache/skywalking-infra-e2e/milestone/4?closed=1)
