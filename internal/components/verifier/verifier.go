@@ -46,18 +46,21 @@ func (e *MismatchError) Error() string {
 
 // Verify checks if the actual data match the expected template.
 func Verify(actualData, expectedTemplate string) error {
-	logger.Log.Info("\nBegin actual=======================\n")
+	logger.Log.Info("\nBegin actualdata=======================\n")
 	logger.Log.Info(actualData)
-	logger.Log.Info("\nEnd actual=======================\n")
-	logger.Log.Info("\nBegin expected=======================\n")
+	logger.Log.Info("\nEnd actualdata=======================\n")
+
+	logger.Log.Info("\nBegin expectedtemplate=======================\n")
 	logger.Log.Info(expectedTemplate)
-	logger.Log.Info("\nEnd expected=======================\n")
+	logger.Log.Info("\nEnd expectedtemplate=======================\n")
 
 	var actual any
 	if err := yaml.Unmarshal([]byte(actualData), &actual); err != nil {
 		return fmt.Errorf("failed to unmarshal actual data: %v", err)
 	}
-
+	logger.Log.Info("\nBegin unmarshal actual=======================\n")
+	logger.Log.Info(actual)
+	logger.Log.Info("\nEnd unmarshal actual=======================\n")
 	tmpl, err := template.New("test").Funcs(funcMap()).Parse(expectedTemplate)
 	if err != nil {
 		return fmt.Errorf("failed to parse template: %v", err)
