@@ -46,6 +46,13 @@ func (e *MismatchError) Error() string {
 
 // Verify checks if the actual data match the expected template.
 func Verify(actualData, expectedTemplate string) error {
+	logger.Log.Info("\nBegin actual=======================\n")
+	logger.Log.Info(actualData)
+	logger.Log.Info("\nEnd actual=======================\n")
+	logger.Log.Info("\nBegin expected=======================\n")
+	logger.Log.Info(expectedTemplate)
+	logger.Log.Info("\nEnd expected=======================\n")
+
 	var actual any
 	if err := yaml.Unmarshal([]byte(actualData), &actual); err != nil {
 		return fmt.Errorf("failed to unmarshal actual data: %v", err)
@@ -65,9 +72,7 @@ func Verify(actualData, expectedTemplate string) error {
 	if err := yaml.Unmarshal(b.Bytes(), &expected); err != nil {
 		return fmt.Errorf("failed to unmarshal expected data: %v", err)
 	}
-	logger.Log.Info(actualData)
-	logger.Log.Info("^actual=======================\n")
-	logger.Log.Info(expectedTemplate)
+
 	if !cmp.Equal(expected, actual) {
 		// TODO: use a custom Reporter (suggested by the comment of cmp.Diff)
 		diff := cmp.Diff(expected, actual)
